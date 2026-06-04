@@ -24,6 +24,56 @@ class VehiclesScreen extends ConsumerWidget {
           ),
         ],
       ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            const DrawerHeader(
+              decoration: BoxDecoration(color: Colors.blue),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Icon(Icons.local_shipping, color: Colors.white, size: 40),
+                  SizedBox(height: 8),
+                  Text('Tracker Fleet', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                ],
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.directions_car),
+              title: const Text('Véhicules'),
+              selected: true,
+              onTap: () => Navigator.of(context).pop(),
+            ),
+            ListTile(
+              leading: const Icon(Icons.local_gas_station),
+              title: const Text('Gasoil'),
+              onTap: () {
+                Navigator.of(context).pop();
+                context.push('/fuel');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.build),
+              title: const Text('Maintenance'),
+              onTap: () {
+                Navigator.of(context).pop();
+                context.push('/maintenance');
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.dashboard),
+              title: const Text('Dashboard'),
+              onTap: () {
+                Navigator.of(context).pop();
+                context.push('/dashboard');
+              },
+            ),
+          ],
+        ),
+      ),
       body: vehiclesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Erreur: $e')),
