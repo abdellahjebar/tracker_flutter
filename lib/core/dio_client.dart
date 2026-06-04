@@ -10,4 +10,8 @@ class DioClient {
   );
 
   static Dio get instance => _dio;
+
+  static Future<Response> get(String url, {Map<String, dynamic>? params}) {
+    return _dio.get(url, queryParameters: params);
+  }
 }

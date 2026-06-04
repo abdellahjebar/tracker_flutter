@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tracker_flutter/domain/models/vehicle.dart';
 import 'package:tracker_flutter/providers/maintenance_provider.dart';
+import 'package:tracker_flutter/providers/vehicle_provider.dart';
 
 class MaintenanceScreen extends ConsumerStatefulWidget {
   const MaintenanceScreen({super.key});
@@ -13,6 +15,7 @@ class MaintenanceScreen extends ConsumerStatefulWidget {
 class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
   DateTime? _from;
   DateTime? _to;
+  Vehicle? _selectedVehicle;
 
   String _formatDate(DateTime d) =>
       '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
@@ -40,11 +43,32 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
   @override
   Widget build(BuildContext context) {
     final maintenanceAsync = ref.watch(maintenanceProvider);
+    final vehiclesAsync = ref.watch(vehicleProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Maintenance')),
       body: Column(
         children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+            child: vehiclesAsync.when(
+              loading: () => const SizedBox.shrink(),
+              error: (err, st) => const SizedBox.shrink(),
+              data: (vehicles) => DropdownMenu<Vehicle?>(
+                label: const Text('Véhicule'),
+                expandedInsets: EdgeInsets.zero,
+                initialSelection: _selectedVehicle,
+                dropdownMenuEntries: [
+                  const DropdownMenuEntry(value: null, label: 'Tous les véhicules'),
+                  ...vehicles.map((v) => DropdownMenuEntry(
+                        value: v,
+                        label: '${v.marque} ${v.modele} — ${v.immatriculation}',
+                      )),
+                ],
+                onSelected: (v) => setState(() => _selectedVehicle = v),
+              ),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.all(12),
             child: Row(
@@ -64,12 +88,13 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
                     label: Text(_to == null ? 'Au' : _formatDate(_to!)),
                   ),
                 ),
-                if (_from != null || _to != null)
+                if (_from != null || _to != null || _selectedVehicle != null)
                   IconButton(
                     icon: const Icon(Icons.clear),
                     onPressed: () => setState(() {
                       _from = null;
                       _to = null;
+                      _selectedVehicle = null;
                     }),
                   ),
               ],
@@ -81,6 +106,7 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen> {
               error: (e, _) => Center(child: Text('Erreur: $e')),
               data: (all) {
                 final entries = all.where((m) {
+                  if (_selectedVehicle != null && m.vehicleId != _selectedVehicle!.id) return false;
                   if (_from != null && m.date.isBefore(_from!)) return false;
                   if (_to != null && m.date.isAfter(_to!.add(const Duration(days: 1)))) return false;
                   return true;
